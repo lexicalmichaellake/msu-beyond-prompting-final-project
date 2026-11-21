@@ -35,7 +35,7 @@
   };
 
   const settings = Object.assign(
-    { sound: true, blips: true, speed: reduceMotion ? 'instant' : 'normal' },
+    { sound: true, blips: true, speed: reduceMotion ? 'instant' : 'normal', howto: true },
     load('settings', {})
   );
   const progress = load('progress', {});
@@ -249,6 +249,7 @@
     finishTyping();
     hideGloss();
     $('#modal').hidden = true;
+    dismissHowto();
     $$('.screen').forEach((s) => { s.hidden = s.id !== 'screen-' + name; });
     document.body.classList.toggle('reading', name === 'read');
     screen = name;
@@ -271,13 +272,13 @@
     const m = /^lectura-(\d+)$/.exec(h);
     if (m && L.levels[+m[1] - 1]) startLevel(+m[1] - 1);
     else if (h === 'vocabulario') showVocab();
-    else if (h === 'como-funciona') show('help');
+    else if (h === 'como-funciona') { showTitle(); openHowto(); }
     else if (h === 'opciones') showOptions();
     else showTitle();
   }
 
   window.addEventListener('hashchange', route);
-  $$('.back').forEach((b) => b.addEventListener('click', () => navigate('')));
+  $$('.back[data-go]').forEach((b) => b.addEventListener('click', () => navigate('')));
 
   /* ───────── menus ───────── */
 
@@ -333,7 +334,7 @@
   }
 
   function showTitle() {
-    show('title');
+    if (screen !== 'title') show('title');
     const ul = $('#menu');
     ul.replaceChildren();
     L.levels.forEach((lv, i) => ul.append(levelButton(i)));
@@ -360,6 +361,66 @@
   };
   $('#menu').addEventListener('mouseover', showHelp);
   $('#menu').addEventListener('focusin', showHelp);
+
+  /* ───────── instructions sheet ("Cómo funciona") ───────── */
+
+  // It pops up when the site opens and from the menu. "No mostrar al abrir"
+  // is remembered in this browser only.
+  const howto = $('#howto');
+  const howtoBox = $('.sheet', howto);
+  const howtoSkip = $('#howto-skip');
+  let howtoThen = null;      // what to do after "¡Entendido!" (for example, open a linked reading)
+  let howtoReturn = null;    // where keyboard focus goes back to
+
+  function openHowto(then) {
+    howtoThen = then || null;
+    howtoReturn = document.activeElement;
+    howtoSkip.checked = settings.howto === false;
+    hideGloss();
+    howto.hidden = false;
+    $$('.screen').forEach((s) => { s.inert = true; });
+    howtoBox.classList.remove('opening');
+    void howtoBox.offsetWidth;
+    howtoBox.classList.add('opening');
+    $('.sheet-body', howto).scrollTop = 0;
+    howtoBox.focus({ preventScroll: true });
+  }
+
+  // Hides the sheet without running anything after it (used when the screen changes).
+  function dismissHowto() {
+    if (howto.hidden) return;
+    howto.hidden = true;
+    howtoThen = null;
+    $$('.screen').forEach((s) => { s.inert = false; });
+  }
+
+  function closeHowto() {
+    if (howto.hidden) return;
+    const then = howtoThen;
+    dismissHowto();
+    if (then) { then(); return; }
+    if (location.hash === '#como-funciona') { navigate(''); return; }
+    const back = howtoReturn && howtoReturn !== document.body && document.contains(howtoReturn) ? howtoReturn : $('#menu button');
+    if (back) back.focus({ preventScroll: true });
+  }
+
+  function trapTab(e, box) {
+    const items = $$('button, input, [href], [tabindex]:not([tabindex="-1"])', box).filter((el) => !el.disabled && el.offsetParent !== null);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const inside = box.contains(document.activeElement) && document.activeElement !== box;
+    if (e.shiftKey && (!inside || document.activeElement === first)) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (!inside || document.activeElement === last)) { e.preventDefault(); first.focus(); }
+  }
+
+  howtoSkip.addEventListener('change', () => {
+    settings.howto = !howtoSkip.checked;
+    save('settings', settings);
+  });
+  $('#howto-go').addEventListener('click', closeHowto);
+  $('#howto-x').addEventListener('click', closeHowto);
+  howto.addEventListener('click', (e) => { if (e.target === howto) closeHowto(); });
 
   /* ───────── reading ───────── */
 
@@ -968,6 +1029,13 @@
     const k = e.key;
     if (k !== 'Escape' && k !== 'Tab') Sound.unlock();
 
+    if (!howto.hidden) {
+      if (k === 'Escape') { e.preventDefault(); closeHowto(); }
+      else if (k === 'Tab') trapTab(e, howtoBox);
+      else if (k === 'Enter' && document.activeElement === howtoBox) { e.preventDefault(); closeHowto(); }
+      return;
+    }
+
     if (!modal.hidden) {
       if (k === 'Escape') closeModal();
       if (k === 'Tab') {
@@ -1171,18 +1239,16 @@
 
   /* ───────── start ───────── */
 
-  // Inside a claude.ai artifact, keep the reader's place when the page is updated.
-  const hot = window.claude && window.claude.hot;
-  if (hot && hot.snapshot) {
-    hot.snapshot(() => (screen === 'read' && (S.phase === 'circle' || S.phase === 'inference')
-      ? { screen: 'read', level: S.level, idx: S.idx, phase: S.phase, k: S.k, first: S.first, asked: S.asked, infFirst: S.infFirst, infAsked: S.infAsked, skipped: S.skipped }
-      : { screen }));
+  // Instructions first: the sheet pops up over the title screen when the site
+  // opens, unless this browser chose "No mostrar al abrir". A link to a reading
+  // (for example #lectura-2) opens that reading after the sheet is closed.
+  // Nothing here talks to a server: progress and settings stay in localStorage.
+  syncSound();
+  const startHash = location.hash.slice(1);
+  if (settings.howto !== false || startHash === 'como-funciona') {
+    showTitle();
+    openHowto(startHash && startHash !== 'como-funciona' ? route : null);
+  } else {
+    route();
   }
-  const boot = (data) => {
-    syncSound();
-    if (data && data.screen === 'read' && L.levels[data.level]) startLevel(data.level, data);
-    else route();
-  };
-  if (hot && hot.ready) hot.ready(boot);
-  else boot((hot && hot.data) || {});
 })();

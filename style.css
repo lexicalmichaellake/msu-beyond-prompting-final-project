@@ -7,6 +7,42 @@
    pairs pass WCAG AAA (7:1 or better) in the WebAIM contrast checker. Hover and
    selected states darken the background instead of lightening it, so contrast
    only goes up. Keep that rule when changing colors. */
+
+/* Fonts ship with the site (SIL Open Font License, see fonts/), so the page
+   never contacts a font service. Each file holds Latin, Spanish accents,
+   quotes, arrows and ▶ ▼ ★ ♪. */
+@font-face {
+  font-family: "M PLUS Rounded 1c";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/mplus-rounded-1c-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "M PLUS Rounded 1c";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("fonts/mplus-rounded-1c-800.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "M PLUS Rounded 1c";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("fonts/mplus-rounded-1c-900.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Mochiy Pop One";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/mochiy-pop-one-400.woff2") format("woff2");
+}
+
 :root {
   /* color */
   --night: #070b24;          /* page */
@@ -441,7 +477,8 @@ body.reading #app { height: 100%; }
   border-top: 2px dashed var(--rule);
 }
 
-.skip {
+/* Gold action buttons: "¡Quiero las preguntas!" and "¡Entendido! ¡Vamos!" */
+.gold-btn {
   min-height: 44px;
   padding: 4px 14px;
   border: 6px solid transparent;
@@ -456,9 +493,9 @@ body.reading #app { height: 100%; }
   touch-action: manipulation;
 }
 
+.gold-btn:hover { filter: brightness(1.06); }       /* lighter gold, darker text: contrast goes up */
+.gold-btn:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
 .skip::after { content: " ▶▶"; }
-.skip:hover { filter: brightness(1.06); }       /* lighter gold, darker text: contrast goes up */
-.skip:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
 
 .sent {
   border-radius: 3px;
@@ -827,6 +864,101 @@ kbd {
 }
 
 .modal-actions .choice { flex: 1 1 150px; animation: none; }
+
+/* ───────── instructions sheet: pops up when the site opens ───────── */
+
+.sheet-modal {
+  z-index: 60;
+  display: flex;             /* flex, not grid: the sheet's max-height then caps at the screen height */
+  align-items: center;
+  justify-content: center;
+  padding:
+    max(16px, env(safe-area-inset-top, 0px))
+    max(16px, env(safe-area-inset-right, 0px))
+    max(16px, env(safe-area-inset-bottom, 0px))
+    max(16px, env(safe-area-inset-left, 0px));
+}
+
+.sheet {
+  width: min(760px, 100%);
+  max-height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px 12px 20px;
+}
+
+.sheet:focus,
+.sheet:focus-visible { outline: none; }     /* the sheet only takes focus so screen readers start at the top */
+.sheet.opening { animation: win-open 0.3s ease-out both; }
+.sheet .page-head { margin-bottom: 8px; padding-right: 4px; }
+.sheet .en { font-size: var(--small); color: var(--ink-dim); }
+
+.sheet-x {
+  min-width: 42px;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-dim) transparent;
+}
+
+.sheet-intro { margin: 0 0 14px; }
+.sheet-intro .en { display: block; }
+
+.privacy {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 2px solid var(--mint);
+  background: var(--sel);
+}
+
+.privacy .chip { border-color: var(--mint); color: var(--mint); }
+.privacy p { margin: 8px 0 0; }
+.privacy .en { display: block; margin-top: 4px; }
+
+.sheet-foot {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 2px dashed var(--rule);
+}
+
+.dont {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: var(--small);
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+
+.dont input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+.dont input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.sheet-go { margin-left: auto; }
+.sheet-go::after { content: " ▶"; }
 
 .sr-only {
   position: absolute;

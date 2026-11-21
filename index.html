@@ -7,9 +7,6 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Una historia en tres lecturas para Español para la policía, con el círculo de preguntas en cada oración.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect width='16' height='16' fill='%230b1352'/%3E%3Cpath fill='%23ffe066' d='M5 3h6v1h2v1h1v3h1v2H1V8h1V5h1V4h2z'/%3E%3Cpath fill='%23c99a1e' d='M2 9h13v1H2z'/%3E%3Cpath fill='%2302040f' d='M7 4h2v4H7z'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&family=Mochiy+Pop+One&display=swap">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -63,7 +60,7 @@
         <h2 class="story-title" id="story-title">Casco de seguridad</h2>
         <div class="story-body" id="story-body"></div>
         <div class="story-foot" id="story-foot">
-          <button type="button" class="skip" id="skip" title="Ir directo a las preguntas. La lectura completa se queda aquí.">¡Quiero las preguntas!</button>
+          <button type="button" class="gold-btn skip" id="skip" title="Ir directo a las preguntas. La lectura completa se queda aquí.">¡Quiero las preguntas!</button>
         </div>
       </article>
     </div>
@@ -81,13 +78,20 @@
     </div>
   </section>
 
-  <!-- How it works -->
-  <section class="screen" id="screen-help" hidden aria-labelledby="help-h">
-    <div class="win page">
+  <!-- How it works: an instructions sheet that pops up when the site opens -->
+  <div class="modal sheet-modal" id="howto" hidden>
+    <div class="win sheet" role="dialog" aria-modal="true" aria-labelledby="howto-h" tabindex="-1">
       <div class="page-head">
-        <h2 id="help-h">Cómo funciona</h2>
-        <button type="button" class="back" data-go="">◀ Volver</button>
+        <h2 id="howto-h">Cómo funciona</h2>
+        <button type="button" class="back sheet-x" id="howto-x" aria-label="Cerrar">×</button>
       </div>
+      <div class="sheet-body">
+      <p class="sheet-intro"><span class="es">Una historia en tres lecturas: lee, contesta y aprende el vocabulario del capítulo.</span> <span class="en">One story told in three readings. Read, answer, and learn the chapter vocabulary.</span></p>
+      <section class="privacy" aria-labelledby="privacy-h">
+        <span class="chip" id="privacy-h">Privacidad</span>
+        <p>Este sitio no comparte datos de estudiantes con el servidor ni con terceros. No hay cuentas ni nombres. Tus respuestas y tu progreso se guardan solo en este navegador.
+          <span class="en">No student data is shared with the server or with third parties. There are no accounts or names, and your answers and progress are saved only in this browser.</span></p>
+      </section>
       <ol class="steps">
         <li><span class="es">Lee la oración en la lectura.</span> <span class="en">Read the sentence in the reading window: on the left, or at the bottom on a phone.</span></li>
         <li>
@@ -112,9 +116,14 @@
         <li><span class="es">¿Te sientes con suerte?</span> <span class="en">The <span class="gold">¡Quiero las preguntas!</span> button under the reading skips straight to those questions. The whole reading stays on screen.</span></li>
       </ol>
       <p class="keys">Teclado: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> contestar · <kbd>↑</kbd> <kbd>↓</kbd> mover · <kbd>Enter</kbd> elegir · <kbd>Esc</kbd> menú</p>
-      <p class="teacher">Para profes: cada oración recibe el círculo de preguntas de TPRS (Blaine Ray). Las tres lecturas forman una <i>embedded reading</i>: input comprensible que crece poco a poco (Krashen, 1985). Colores: todos los textos pasan WCAG AAA (7:1 o más) en el WebAIM Contrast Checker.</p>
+      <p class="teacher">Para profes: cada oración recibe el círculo de preguntas de TPRS (Blaine Ray). Las tres lecturas forman una <i>embedded reading</i>: input comprensible que crece poco a poco (Krashen, 1985). Colores: todos los textos pasan WCAG AAA (7:1 o más) en el WebAIM Contrast Checker. Sin cookies, sin análisis y sin servicios externos: las fuentes vienen incluidas con el sitio.</p>
+      </div>
+      <div class="sheet-foot">
+        <label class="dont"><input type="checkbox" id="howto-skip"> <span>No mostrar al abrir <span class="en">· don't show on open</span></span></label>
+        <button type="button" class="gold-btn sheet-go" id="howto-go">¡Entendido! ¡Vamos!</button>
+      </div>
     </div>
-  </section>
+  </div>
 
   <!-- Options -->
   <section class="screen" id="screen-options" hidden aria-labelledby="opt-h">
