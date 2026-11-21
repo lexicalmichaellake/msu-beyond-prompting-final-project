@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Casco de seguridad</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Una historia en tres lecturas para Español para la policía, con el círculo de preguntas en cada oración.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect width='16' height='16' fill='%230b1352'/%3E%3Cpath fill='%23ffe066' d='M5 3h6v1h2v1h1v3h1v2H1V8h1V5h1V4h2z'/%3E%3Cpath fill='%23c99a1e' d='M2 9h13v1H2z'/%3E%3Cpath fill='%2302040f' d='M7 4h2v4H7z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&family=Mochiy+Pop+One&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+
+  <!-- Title screen and main menu -->
+  <section class="screen" id="screen-title" aria-labelledby="game-title">
+    <header class="title-head">
+      <p class="kicker">SSP Reading Booster · Español para la policía</p>
+      <h1 class="logo" id="game-title">Casco de seguridad</h1>
+      <p class="tagline">Una historia, tres lecturas. Cada lectura tiene más detalles.</p>
+    </header>
+    <div class="win scene">
+      <canvas id="skyline" width="240" height="64" role="img" aria-label="Una calle de la ciudad muy temprano: la agente Rivera cerca del banco y un muchacho en bicicleta."></canvas>
+    </div>
+    <nav class="win" aria-label="Menú">
+      <ul class="menu" id="menu"></ul>
+    </nav>
+    <p class="win helpline" id="helpline">La historia más corta. Empieza aquí.</p>
+    <p class="credit">Círculo de preguntas: Blaine Ray (TPRS) · Input comprensible: Krashen (1985)</p>
+  </section>
+
+  <!-- Reading screen -->
+  <section class="screen" id="screen-read" hidden aria-label="Lectura">
+    <header class="win hud">
+      <span class="hud-lvl" id="hud-lvl">LECTURA 1</span>
+      <span class="hud-count" id="hud-count"></span>
+      <ol class="circle" id="circle" aria-label="Círculo de preguntas, en el orden de esta oración"></ol>
+      <span class="hud-btns">
+        <button type="button" class="hud-btn" id="hud-sound" aria-pressed="true" aria-label="Sonido">♪</button>
+        <button type="button" class="hud-btn" id="hud-menu">Menú</button>
+      </span>
+    </header>
+
+    <!-- Wide screens: the reading on the left, the Profe and the answers on the right.
+         Phones: the Profe and the answers first, then the reading. -->
+    <div class="read-grid">
+      <div class="side">
+        <div class="dialog-wrap">
+          <span class="win nametag" aria-hidden="true">PROFE</span>
+          <div class="win dialog" id="dialog">
+            <p class="fb" id="fb"></p>
+            <p class="ask" id="ask"></p>
+            <span class="more" id="more" aria-hidden="true" hidden>▼</span>
+          </div>
+        </div>
+        <div class="choices" id="choices" role="group" aria-labelledby="ask"></div>
+      </div>
+
+      <article class="win story" id="story">
+        <h2 class="story-title" id="story-title">Casco de seguridad</h2>
+        <div class="story-body" id="story-body"></div>
+        <div class="story-foot" id="story-foot">
+          <button type="button" class="skip" id="skip" title="Ir directo a las preguntas. La lectura completa se queda aquí.">¡Quiero las preguntas!</button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Vocabulary list -->
+  <section class="screen" id="screen-vocab" hidden aria-labelledby="vocab-h">
+    <div class="win page">
+      <div class="page-head">
+        <h2 id="vocab-h">Vocabulario</h2>
+        <button type="button" class="back" data-go="">◀ Volver</button>
+      </div>
+      <p class="page-note">Las palabras del capítulo. En la lectura, toca una palabra <span class="gold">amarilla</span> para ver qué significa. <span class="count-key">×5</span> = cuántas veces aparece en las lecturas y las preguntas.</p>
+      <div id="vocab-list"></div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="screen" id="screen-help" hidden aria-labelledby="help-h">
+    <div class="win page">
+      <div class="page-head">
+        <h2 id="help-h">Cómo funciona</h2>
+        <button type="button" class="back" data-go="">◀ Volver</button>
+      </div>
+      <ol class="steps">
+        <li><span class="es">Lee la oración en la lectura.</span> <span class="en">Read the sentence in the reading window: on the left, or at the bottom on a phone.</span></li>
+        <li>
+          <span class="es">Contesta el círculo de preguntas.</span> <span class="en">Answer four questions about it. They come in a different order every time, and so do the answers:</span>
+          <ul class="circle-key">
+            <li><span class="chip">Sí</span> <span>una pregunta con respuesta <i>sí</i> <span class="en">· a yes question</span></span></li>
+            <li><span class="chip">O</span> <span>una pregunta con <i>o</i> <span class="en">· an either/or question</span></span></li>
+            <li><span class="chip">No</span> <span>una pregunta con respuesta <i>no</i> <span class="en">· a no question</span></span></li>
+            <li><span class="chip">¿?</span> <span>una pregunta con ¿qué?, ¿quién?, ¿cómo? o ¿por qué? <span class="en">· a question-word question</span></span></li>
+          </ul>
+        </li>
+        <li><span class="es">Toca las palabras <span class="gold">amarillas</span>.</span> <span class="en">Tap yellow words to see what they mean. Words with a dotted line are extra help.</span></li>
+        <li>
+          <span class="es">Lee las tres lecturas.</span> <span class="en">Readings 1, 2 and 3 tell the same story, with more detail each time. The answers grow too:</span>
+          <ul class="circle-key">
+            <li><span class="chip">1</span> <span>emojis y palabras <span class="en">· ☑️ ❌ and pictures</span></span></li>
+            <li><span class="chip">2</span> <span>palabras <span class="en">· words and short phrases</span></span></li>
+            <li><span class="chip">3</span> <span>oraciones completas <span class="en">· complete sentences</span></span></li>
+          </ul>
+        </li>
+        <li><span class="es">Contesta las preguntas de inferencia.</span> <span class="en">After each reading, a few questions ask you to read between the lines. Then you choose the next reading.</span></li>
+        <li><span class="es">¿Te sientes con suerte?</span> <span class="en">The <span class="gold">¡Quiero las preguntas!</span> button under the reading skips straight to those questions. The whole reading stays on screen.</span></li>
+      </ol>
+      <p class="keys">Teclado: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> contestar · <kbd>↑</kbd> <kbd>↓</kbd> mover · <kbd>Enter</kbd> elegir · <kbd>Esc</kbd> menú</p>
+      <p class="teacher">Para profes: cada oración recibe el círculo de preguntas de TPRS (Blaine Ray). Las tres lecturas forman una <i>embedded reading</i>: input comprensible que crece poco a poco (Krashen, 1985). Colores: todos los textos pasan WCAG AAA (7:1 o más) en el WebAIM Contrast Checker.</p>
+    </div>
+  </section>
+
+  <!-- Options -->
+  <section class="screen" id="screen-options" hidden aria-labelledby="opt-h">
+    <div class="win page">
+      <div class="page-head">
+        <h2 id="opt-h">Opciones</h2>
+        <button type="button" class="back" data-go="">◀ Volver</button>
+      </div>
+      <ul class="menu" id="options-list"></ul>
+      <p class="sample" id="speed-sample" aria-hidden="true"></p>
+    </div>
+  </section>
+
+  <!-- Leave-the-reading confirmation -->
+  <div class="modal" id="modal" hidden>
+    <div class="win modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-q">
+      <p id="modal-q">¿Salir al menú? La lectura empieza otra vez después.</p>
+      <div class="modal-actions">
+        <button type="button" class="choice" id="modal-yes">Sí, salir</button>
+        <button type="button" class="choice" id="modal-no">No, seguir</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="win gloss" id="gloss" role="status" hidden></div>
+  <div class="sr-only" id="sr-live" aria-live="polite"></div>
+</main>
+
+<script src="sound.js"></script>
+<script src="lectura-casco.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
