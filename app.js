@@ -35,10 +35,11 @@
   };
 
   const settings = Object.assign(
-    { sound: true, blips: true, speed: reduceMotion ? 'instant' : 'normal', howto: true },
+    { sound: true, blips: true, speed: reduceMotion ? 'instant' : 'normal', howto: true, profe: true },
     load('settings', {})
   );
   const progress = load('progress', {});
+  let totalPoints = Math.max(0, Math.floor(Number(load('points', 0)) || 0));
   const SPEEDS = ['slow', 'normal', 'fast', 'instant'];
   const SPEED_MS = { slow: 46, normal: 26, fast: 11, instant: 0 };
   const SPEED_NAME = { slow: 'Lenta', normal: 'Normal', fast: 'Rápida', instant: 'Ya' };
@@ -54,12 +55,13 @@
   const YES_NO = ['Sí', 'No'];
   const YES_NO_EMOJI = ['☑️', '❌'];
   const MODE_NAME = { emoji: 'respuestas con emojis', words: 'respuestas con palabras', sentences: 'respuestas con oraciones completas' };
-  const CHIP = {
-    yes: ['Sí', 'Pregunta de sí'],
-    either: ['O', 'Pregunta de o'],
-    no: ['No', 'Pregunta de no'],
-    wh: ['¿?', 'Pregunta con ¿qué?, ¿quién?, ¿cómo?…']
-  };
+
+  // Points. Circle answer: 10 on the first try, 5 after a retry. Inference
+  // answer: 20 / 10. Finishing a reading adds a bonus of 50 times its number.
+  // After "¡Quiero las preguntas!" the bonus only comes when every inference
+  // answer was right on the first try (¿Te sientes con suerte?). Replaying a
+  // reading earns points again: more reading, more input.
+  const POINTS = { circle: [10, 5], inference: [20, 10], bonus: 50 };
 
   /* ───────── content check: warns in the console about mismatched answers ───────── */
 
@@ -205,6 +207,7 @@
     finishTyping();
     const text = plain(content);
     const ms = SPEED_MS[settings.speed];
+    const profeTalks = el === fb || el === askEl;      // the Profe's mouth moves with the dialog
     return new Promise((resolve) => {
       let timer = 0;
       let finished = false;
@@ -217,13 +220,19 @@
         renderRich(el, content);
         el.removeAttribute('aria-hidden');
         if (!opts.quiet) announce(text);
+        if (profeTalks) Profe.talk(false);
         resolve();
       };
       me.finish = done;
-      if (!ms) { done(); return; }
+      if (!ms) {
+        done();
+        if (profeTalks && text) Profe.say(text.length);
+        return;
+      }
       const chars = renderTyping(el, content);
       el.setAttribute('aria-hidden', 'true');
       typing = me;
+      if (profeTalks) Profe.talk(true);
       let i = 0;
       let n = 0;
       const step = () => {
@@ -259,6 +268,7 @@
     void el.offsetWidth;
     el.classList.add('enter');
     if (name === 'title') Scene.start(); else Scene.stop();
+    if (name === 'read') Profe.start(); else Profe.stop();
     window.scrollTo(0, 0);
   }
 
@@ -316,14 +326,44 @@
     const lv = L.levels[i];
     const paras = lv.paragraphs.length;
     const p = progress[i];
+    const hasPts = p && typeof p.points === 'number';
     return menuButton({
       go: 'lectura-' + (i + 1),
       name: lv.title,
       sub: paras + (paras === 1 ? ' párrafo' : ' párrafos') + ' · ' + (MODE_NAME[lv.responses] || MODE_NAME.words) + (note || ''),
-      help: lv.blurb + (p ? ' Tu mejor resultado: ' + p.best + ' de ' + p.total + ' al primer intento.' : ''),
-      badge: p ? p.best + '/' + p.total : '',
+      help: lv.blurb + (p ? ' Tu mejor resultado: ' + (hasPts ? p.points + ' puntos, ' : '') + p.best + ' de ' + p.total + ' al primer intento.' : ''),
+      badge: p ? (hasPts ? p.points + ' pts' : p.best + '/' + p.total) : '',
       star: !!p
     });
+  }
+
+  /* ───────── points: a running total, saved in this browser only ───────── */
+
+  const ptsEl = $('#hud-pts');
+  const ptsNum = $('.n', ptsEl);
+  function showPoints() {
+    ptsNum.textContent = String(totalPoints);
+    ptsEl.title = 'Tus puntos: ' + totalPoints;
+    const line = $('#score-line');
+    line.hidden = totalPoints === 0;
+    line.textContent = '★ Tus puntos: ' + totalPoints;
+  }
+
+  function award(n) {
+    if (!n) return;
+    S.points += n;
+    totalPoints += n;
+    save('points', totalPoints);
+    showPoints();
+    const pop = document.createElement('span');
+    pop.className = 'pop';
+    pop.setAttribute('aria-hidden', 'true');
+    pop.textContent = '+' + n;
+    ptsEl.append(pop);
+    setTimeout(() => pop.remove(), 1100);
+    ptsEl.classList.remove('bump');
+    void ptsEl.offsetWidth;
+    ptsEl.classList.add('bump');
   }
 
   function separator() {
@@ -343,6 +383,7 @@
     ul.append(menuButton({ go: 'como-funciona', name: 'Cómo funciona', sub: 'El círculo de preguntas', help: 'Lee esto primero: cómo contestar y qué significan los colores.' }));
     ul.append(menuButton({ go: 'opciones', name: 'Opciones', sub: 'Sonido y velocidad del texto', help: 'Sonido, bip del texto y velocidad del texto.' }));
     $('#helpline').textContent = L.levels[0].blurb;
+    showPoints();
     if (lastMenu) {
       const again = $('#menu button[data-go="' + lastMenu + '"]');
       if (again) again.focus({ preventScroll: true });
@@ -425,7 +466,7 @@
   /* ───────── reading ───────── */
 
   const hud = $('.hud');
-  const circleEl = $('#circle');
+  const dotsEl = $('#dots');
   const story = $('#story');
   const storyBody = $('#story-body');
   const fb = $('#fb');
@@ -437,7 +478,7 @@
   const wide = window.matchMedia('(min-width: 760px)');   // two columns: the reading is on the left
   const S = {
     level: 0, sents: [], idx: 0, order: [], phase: 'intro', k: 0,
-    first: 0, asked: 0, infFirst: 0, infAsked: 0, missed: false, done: false, skipped: false
+    first: 0, asked: 0, infFirst: 0, infAsked: 0, points: 0, missed: false, done: false, skipped: false
   };
   const mode = () => L.levels[S.level].responses || 'words';
 
@@ -456,6 +497,7 @@
     S.first = r.first || 0;
     S.asked = r.asked || 0;
     S.infFirst = r.infFirst || 0;
+    S.points = r.points || 0;
     S.infAsked = r.infAsked || 0;
     S.skipped = !!r.skipped;
     $('#hud-lvl').textContent = lv.title.toUpperCase();
@@ -469,9 +511,10 @@
     choices.style.minHeight = '';
     clearDialog();
     syncSkip();
+    Profe.react('idle');
     if (S.phase === 'inference') { startInference(my, r.k || 0); return; }
     S.order = S.sents[S.idx].c.map((_, i) => i);
-    renderChips();
+    renderDots();
     hud.classList.remove('no-circle');
     updateCount();
     if (S.idx === 0) intro(my, lv);
@@ -481,6 +524,7 @@
   async function intro(my, lv) {
     await wait(320);
     if (my !== run) return;
+    Profe.react('welcome');                  // open arms: "¡Hola, clase!"
     await typeText(askEl, lv.intro);
     if (my !== run) return;
     showChoices([{ label: '¡Vamos!', go: true, action: true, onPick: () => playSentence(run) }]);
@@ -526,10 +570,11 @@
     $$('.sent.now', storyBody).forEach((el) => el.classList.replace('now', 'past'));
     clearDialog();
     S.order = shuffle(s.c.map((_, i) => i));        // a new circle order for every sentence
-    renderChips();
+    renderDots();
     hud.classList.remove('no-circle');
     updateCount();
     Sound.next();
+    Profe.react(Math.random() < 0.5 ? 'gasp' : 'present');   // "¡Ohhh! ¡Clase, miren!"
     const span = addSentence(S.idx, 'now');
     const typed = typeText(span, s.t);      // lays out the whole sentence at once
     scrollToSentence(span);
@@ -543,15 +588,17 @@
   async function askCircle(my, step) {
     const q = S.sents[S.idx].c[S.order[step]];
     S.missed = false;
-    setChip(step);
+    setDot(step);
     clearChoices();
+    Profe.react('ask');                      // palms up, waiting for the class
     await typeText(askEl, q.ask);
     if (my !== run) return;
     offer(my, q,
       (firstTry) => {
         S.asked += 1;
         if (firstTry) S.first += 1;
-        markChip(step, firstTry ? 'ok' : 'retry');
+        markDot(step);
+        award(POINTS.circle[firstTry ? 0 : 1]);
       },
       () => (step < S.order.length - 1 ? askCircle(my, step + 1) : endOfCircle()));
   }
@@ -602,11 +649,13 @@
       if (other) other.focus({ preventScroll: true });
       pulseSentence();
       fb.className = 'fb hint';
+      Profe.react('encourage');              // a kind shrug: "¡Casi!"
       typeText(fb, pick(HINTS));
       return;
     }
 
     Sound.correct();
+    Profe.react(Math.random() < 0.5 ? 'yay' : 'clap');
     choices.classList.add('locked');
     btn.classList.add('right');
     $$('.choice', choices).forEach((b) => { if (b !== btn) b.classList.add('gone'); });
@@ -651,6 +700,7 @@
     hud.classList.add('no-circle');
     clearDialog();
     syncSkip();
+    Profe.react('think');
     if (k > 0) { askInference(my, k); return; }
     updateCount('Inferencia');
     const where = wide.matches ? 'a la izquierda' : 'abajo';
@@ -668,12 +718,14 @@
     S.missed = false;
     updateCount('Inferencia ' + (k + 1) + '/' + list.length);
     clearChoices();
+    Profe.react('think');                    // hand at the chin: read between the lines
     await typeText(askEl, q.ask);
     if (my !== run) return;
     offer(my, q,
       (firstTry) => {
         S.infAsked += 1;
         if (firstTry) S.infFirst += 1;
+        award(POINTS.inference[firstTry ? 0 : 1]);
       },
       () => (k < list.length - 1 ? askInference(my, k + 1) : finishLevel(my)));
   }
@@ -684,16 +736,23 @@
     S.phase = 'end';
     S.done = true;
     Sound.fanfare();
+    Profe.react('celebrate');                // a happy jump with both arms up
     $$('.sent.now', storyBody).forEach((el) => el.classList.replace('now', 'past'));
     story.classList.add('fin');
     hud.classList.add('no-circle');
     updateCount('¡Fin!');
+    // Bonus for finishing. After "¡Quiero las preguntas!" it needs every
+    // inference answer right on the first try.
+    const lucky = S.skipped;
+    const bonus = !lucky || (S.infAsked > 0 && S.infFirst === S.infAsked) ? POINTS.bonus * (S.level + 1) : 0;
+    award(bonus);
     const best = S.first + S.infFirst;
     const total = S.asked + S.infAsked;
     const prev = progress[S.level];
     // A shorter run (after "¡Quiero las preguntas!") never replaces a fuller run's record.
     if (!prev || total > prev.total) progress[S.level] = { best, total };
     else if (total === prev.total) progress[S.level] = { best: Math.max(prev.best, best), total };
+    progress[S.level].points = Math.max((prev && prev.points) || 0, S.points);
     save('progress', progress);
     clearDialog();
     syncSkip();
@@ -702,11 +761,16 @@
     const parts = [];
     if (S.asked) parts.push('círculo ' + S.first + ' de ' + S.asked);
     if (S.infAsked) parts.push('inferencia ' + S.infFirst + ' de ' + S.infAsked);
-    await typeText(fb, [
-      { text: (isLast ? '¡Felicidades! Ya comprendes la historia completa.' : '¡Excelente! Ya comprendes la ' + lv.title + '.') + ' ', cls: 'yay' },
-      { text: parts.length ? 'Al primer intento: ' + parts.join(', ') + '.' : '' }
-    ]);
+    const lines = [
+      { text: (isLast ? '¡Felicidades! Ya comprendes la historia completa.' : '¡Excelente! Ya comprendes la ' + lv.title + '.') + ' ', cls: 'yay' }
+    ];
+    if (parts.length) lines.push({ text: 'Al primer intento: ' + parts.join(', ') + '. ' });
+    if (bonus) lines.push({ text: (lucky ? '¡Qué suerte! ' : '') + 'Bono: +' + bonus + ' puntos. ', cls: 'yay' });
+    else if (lucky) lines.push({ text: 'No hay bono esta vez: necesitas todo correcto al primer intento. ' });
+    lines.push({ text: 'Ganaste ' + S.points + ' puntos. Total: ' + totalPoints + '.' });
+    await typeText(fb, lines);
     if (my !== run) return;
+    Profe.react('welcome');
     await typeText(askEl, '¿Qué lectura quieres leer ahora?');
     if (my !== run) return;
     showLevelMenu();
@@ -791,23 +855,23 @@
     more.hidden = true;
   }
 
-  function renderChips() {
-    const s = S.sents[S.idx];
-    circleEl.replaceChildren(...S.order.map((i) => {
-      const chip = CHIP[s.c[i].type] || ['?', ''];
-      const li = document.createElement('li');
-      li.textContent = chip[0];
-      li.title = chip[1];
-      return li;
-    }));
+  // One plain dot per question in the circle. The dots show progress only:
+  // they never say whether the next question is a yes, no, either/or or
+  // question-word question, so every question has to be read.
+  function renderDots() {
+    dotsEl.replaceChildren(...S.order.map(() => document.createElement('li')));
+    dotsEl.setAttribute('aria-label', 'Pregunta 1 de ' + S.order.length);
   }
-  const chips = () => $$('li', circleEl);
-  function setChip(step) { chips().forEach((c, i) => c.classList.toggle('now', i === step)); }
-  function markChip(step, state) {
-    const c = chips()[step];
-    if (!c) return;
-    c.classList.remove('now');
-    c.classList.add(state);
+  const dots = () => $$('li', dotsEl);
+  function setDot(step) {
+    dots().forEach((d, i) => d.classList.toggle('now', i === step));
+    dotsEl.setAttribute('aria-label', 'Pregunta ' + (step + 1) + ' de ' + S.order.length);
+  }
+  function markDot(step) {
+    const d = dots()[step];
+    if (!d) return;
+    d.classList.remove('now');
+    d.classList.add('done');
   }
 
   function updateCount(text) {
@@ -874,6 +938,12 @@
     soundBtn.setAttribute('aria-pressed', String(settings.sound));
     soundBtn.title = settings.sound ? 'Sonido: sí' : 'Sonido: no';
   }
+  // "El Profe: No" in Opciones hides the animated teacher (handy on small phones).
+  function syncProfe() {
+    document.body.classList.toggle('no-profe', !settings.profe);
+    Profe.refresh();
+  }
+
   soundBtn.addEventListener('click', () => {
     settings.sound = !settings.sound;
     save('settings', settings);
@@ -994,7 +1064,8 @@
     const rows = [
       { name: 'Sonido', sub: 'Campanas y efectos', value: settings.sound ? 'Sí' : 'No', toggle() { settings.sound = !settings.sound; } },
       { name: 'Bip del texto', sub: 'Un bip suave con las letras', value: settings.blips ? 'Sí' : 'No', toggle() { settings.blips = !settings.blips; } },
-      { name: 'Velocidad del texto', sub: 'Lenta, normal, rápida o ya', value: SPEED_NAME[settings.speed], toggle() { settings.speed = SPEEDS[(SPEEDS.indexOf(settings.speed) + 1) % SPEEDS.length]; } }
+      { name: 'Velocidad del texto', sub: 'Lenta, normal, rápida o ya', value: SPEED_NAME[settings.speed], toggle() { settings.speed = SPEEDS[(SPEEDS.indexOf(settings.speed) + 1) % SPEEDS.length]; } },
+      { name: 'El Profe', sub: 'El profe animado arriba del diálogo', value: settings.profe ? 'Sí' : 'No', toggle() { settings.profe = !settings.profe; } }
     ];
     rows.forEach((row, i) => {
       const li = menuButton({ go: '', name: row.name, sub: row.sub, badge: row.value });
@@ -1003,9 +1074,10 @@
         save('settings', settings);
         Sound.configure(settings);
         syncSound();
+        syncProfe();
         renderOptions(i);
         if (i === 0 && settings.sound) { Sound.unlock(); Sound.correct(); }
-        if (i > 0) typeText($('#speed-sample'), 'Es temprano y la agente Rivera camina por la ciudad.', { quiet: true });
+        if (i === 1 || i === 2) typeText($('#speed-sample'), 'Es temprano y la agente Rivera camina por la ciudad.', { quiet: true });
       });
       ul.append(li);
     });
@@ -1244,6 +1316,8 @@
   // (for example #lectura-2) opens that reading after the sheet is closed.
   // Nothing here talks to a server: progress and settings stay in localStorage.
   syncSound();
+  syncProfe();
+  showPoints();
   const startHash = location.hash.slice(1);
   if (settings.howto !== false || startHash === 'como-funciona') {
     showTitle();

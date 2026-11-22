@@ -18,6 +18,7 @@
       <p class="kicker">SSP Reading Booster · Español para la policía</p>
       <h1 class="logo" id="game-title">Casco de seguridad</h1>
       <p class="tagline">Una historia, tres lecturas. Cada lectura tiene más detalles.</p>
+      <p class="score-line" id="score-line" hidden></p>
     </header>
     <div class="win scene">
       <canvas id="skyline" width="240" height="64" role="img" aria-label="Una calle de la ciudad muy temprano: la agente Rivera cerca del banco y un muchacho en bicicleta."></canvas>
@@ -34,8 +35,10 @@
     <header class="win hud">
       <span class="hud-lvl" id="hud-lvl">LECTURA 1</span>
       <span class="hud-count" id="hud-count"></span>
-      <ol class="circle" id="circle" aria-label="Círculo de preguntas, en el orden de esta oración"></ol>
+      <!-- Progress through the four questions; it never says which kind of question is next -->
+      <ol class="dots" id="dots" role="img" aria-label="Pregunta 1 de 4"></ol>
       <span class="hud-btns">
+        <span class="hud-pts" id="hud-pts" title="Tus puntos"><span aria-hidden="true">★</span> <span class="n">0</span><span class="sr-only"> puntos</span></span>
         <button type="button" class="hud-btn" id="hud-sound" aria-pressed="true" aria-label="Sonido">♪</button>
         <button type="button" class="hud-btn" id="hud-menu">Menú</button>
       </span>
@@ -45,6 +48,10 @@
          Phones: the Profe and the answers first, then the reading. -->
     <div class="read-grid">
       <div class="side">
+        <!-- The Profe: an animated pixel-art teacher (decorative; the dialog says it all) -->
+        <div class="win stage" id="stage" aria-hidden="true">
+          <canvas id="profe" width="160" height="60"></canvas>
+        </div>
         <div class="dialog-wrap">
           <span class="win nametag" aria-hidden="true">PROFE</span>
           <div class="win dialog" id="dialog">
@@ -73,7 +80,7 @@
         <h2 id="vocab-h">Vocabulario</h2>
         <button type="button" class="back" data-go="">◀ Volver</button>
       </div>
-      <p class="page-note">Las palabras del capítulo. En la lectura, toca una palabra <span class="gold">amarilla</span> para ver qué significa. <span class="count-key">×5</span> = cuántas veces aparece en las lecturas y las preguntas.</p>
+      <p class="page-note">Las palabras del capítulo. En la lectura, toca una palabra <span class="blue-word">azul</span> para ver qué significa. <span class="count-key">×5</span> = cuántas veces aparece en las lecturas y las preguntas.</p>
       <div id="vocab-list"></div>
     </div>
   </section>
@@ -89,8 +96,8 @@
       <p class="sheet-intro"><span class="es">Una historia en tres lecturas: lee, contesta y aprende el vocabulario del capítulo.</span> <span class="en">One story told in three readings. Read, answer, and learn the chapter vocabulary.</span></p>
       <section class="privacy" aria-labelledby="privacy-h">
         <span class="chip" id="privacy-h">Privacidad</span>
-        <p>Este sitio no comparte datos de estudiantes con el servidor ni con terceros. No hay cuentas ni nombres. Tus respuestas y tu progreso se guardan solo en este navegador.
-          <span class="en">No student data is shared with the server or with third parties. There are no accounts or names, and your answers and progress are saved only in this browser.</span></p>
+        <p>Este sitio no comparte datos de estudiantes con el servidor ni con terceros. No hay cuentas ni nombres. Tus respuestas, tus puntos y tu progreso se guardan solo en este navegador.
+          <span class="en">No student data is shared with the server or with third parties. There are no accounts or names, and your answers, points and progress are saved only in this browser.</span></p>
       </section>
       <ol class="steps">
         <li><span class="es">Lee la oración en la lectura.</span> <span class="en">Read the sentence in the reading window: on the left, or at the bottom on a phone.</span></li>
@@ -103,7 +110,7 @@
             <li><span class="chip">¿?</span> <span>una pregunta con ¿qué?, ¿quién?, ¿cómo? o ¿por qué? <span class="en">· a question-word question</span></span></li>
           </ul>
         </li>
-        <li><span class="es">Toca las palabras <span class="gold">amarillas</span>.</span> <span class="en">Tap yellow words to see what they mean. Words with a dotted line are extra help.</span></li>
+        <li><span class="es">Toca las palabras <span class="blue-word">azules</span>.</span> <span class="en">Tap blue words to see what they mean. Chapter words have a solid line; words with a dotted line are extra help.</span></li>
         <li>
           <span class="es">Lee las tres lecturas.</span> <span class="en">Readings 1, 2 and 3 tell the same story, with more detail each time. The answers grow too:</span>
           <ul class="circle-key">
@@ -113,7 +120,15 @@
           </ul>
         </li>
         <li><span class="es">Contesta las preguntas de inferencia.</span> <span class="en">After each reading, a few questions ask you to read between the lines. Then you choose the next reading.</span></li>
-        <li><span class="es">¿Te sientes con suerte?</span> <span class="en">The <span class="gold">¡Quiero las preguntas!</span> button under the reading skips straight to those questions. The whole reading stays on screen.</span></li>
+        <li>
+          <span class="es">Gana puntos.</span> <span class="en">Your total is at the top of the screen and keeps growing as you read:</span>
+          <ul class="points-key">
+            <li><span><b>+10</b> cada respuesta del círculo al primer intento, <b>+5</b> después <span class="en">· each circle answer on the first try, +5 after a retry</span></span></li>
+            <li><span><b>+20</b> cada respuesta de inferencia al primer intento, <b>+10</b> después <span class="en">· each inference answer, +10 after a retry</span></span></li>
+            <li><span><b>+50 · +100 · +150</b> de bono al terminar la Lectura 1, 2 o 3 <span class="en">· a bonus for finishing each reading</span></span></li>
+          </ul>
+        </li>
+        <li><span class="es">¿Te sientes con suerte?</span> <span class="en">The <b>¡Quiero las preguntas!</b> button under the reading skips straight to the inference questions, and the whole reading stays on screen. You skip the circle points, and you only get the bonus if every inference answer is right on the first try.</span></li>
       </ol>
       <p class="keys">Teclado: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> contestar · <kbd>↑</kbd> <kbd>↓</kbd> mover · <kbd>Enter</kbd> elegir · <kbd>Esc</kbd> menú</p>
       <p class="teacher">Para profes: cada oración recibe el círculo de preguntas de TPRS (Blaine Ray). Las tres lecturas forman una <i>embedded reading</i>: input comprensible que crece poco a poco (Krashen, 1985). Colores: todos los textos pasan WCAG AAA (7:1 o más) en el WebAIM Contrast Checker. Sin cookies, sin análisis y sin servicios externos: las fuentes vienen incluidas con el sitio.</p>
@@ -154,6 +169,8 @@
 
 <script src="sound.js"></script>
 <script src="lectura-casco.js"></script>
+<script src="profe-sprites.js"></script>
+<script src="profe.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
     There is no build step: save the file and reload the page.
 
     vocab    The chapter list. "forms" are the exact words the page highlights
-             in yellow (tap one to see its meaning). Leave "forms" empty for
+             in blue (tap one to see its meaning). Leave "forms" empty for
              words too common to highlight (a, por, que).
     extras   Words that are not on the chapter list but appear in the story.
              They get a dotted underline and a gloss.
@@ -146,7 +146,7 @@ window.LECTURA = {
       title: "Lectura 1",
       responses: "emoji",
       blurb: "La historia más corta. Contesta con emojis o palabras. Empieza aquí.",
-      intro: "¡Hola! Esta es la Lectura 1, la historia más corta. Lee cada oración y contesta el círculo de preguntas. A veces puedes contestar con emojis. Toca las palabras amarillas para ver qué significan.",
+      intro: "¡Hola! Esta es la Lectura 1, la historia más corta. Lee cada oración y contesta el círculo de preguntas. A veces puedes contestar con emojis. Toca las palabras azules para ver qué significan.",
       paragraphs: [
         [
           { t: "La agente Rivera camina por la ciudad.", c: [

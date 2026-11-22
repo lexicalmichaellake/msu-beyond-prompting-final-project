@@ -1,12 +1,15 @@
-/* Layout: a centered column of RPG windows. Reading screen on wide screens:
-   the passage on the left, the Profe's dialog and the answers on the right.
-   The look is one committed night-blue palette (no light variant).
+/* Layout: a centered column of cards. Reading screen on wide screens: the
+   passage on the left, the Profe's stage, dialog and answers on the right.
+   The look is light and modern: white cards on a light-gray page. Every
+   word you can tap for a gloss is blue, like a link. The pixel-art scenes
+   (the title street and the Profe's classroom) keep the video-game feel.
 
    Contrast: every text color below was checked against every background it can
-   sit on, including hover, the current-sentence band and the filled chips. All
-   pairs pass WCAG AAA (7:1 or better) in the WebAIM contrast checker. Hover and
-   selected states darken the background instead of lightening it, so contrast
-   only goes up. Keep that rule when changing colors. */
+   sit on, including hover, the current-sentence band and the answer states.
+   All pairs pass WCAG AAA (7:1 or better); run node tools/contrast_audit.js
+   after any color change. Hover and selected states darken the background a
+   little (white to light gray), and the text colors are dark enough to stay
+   above 7:1 there too. Keep that rule when changing colors. */
 
 /* Fonts ship with the site (SIL Open Font License, see fonts/), so the page
    never contacts a font service. Each file holds Latin, Spanish accents,
@@ -45,46 +48,46 @@
 
 :root {
   /* color */
-  --night: #070b24;          /* page */
-  --night-dot: #141d55;      /* page pattern, lightest page color */
-  --win-top: #1b2c84;        /* window gradient, lightest window color */
-  --win-bot: #0a1250;
-  --sel: #0f1a66;            /* hover and selected rows and buttons */
-  --edge: #02040f;           /* outlines and text shadow */
-  --ink: #ffffff;            /* text: 12.0:1 on --win-top */
-  --ink-dim: #c6cdf6;        /* past sentences, notes: 7.7:1 */
-  --gold: #ffe680;           /* chapter vocabulary: 9.7:1 */
-  --gold-dim: #eedc98;       /* vocabulary in past sentences: 8.8:1 */
-  --gold-deep: #b8870f;      /* logo extrusion only (not text) */
-  --mint: #9cf5c0;           /* correct: 9.3:1 */
-  --rose: #ffc4d0;           /* gentle "not yet": 8.1:1 */
-  --sky: #a3dcff;            /* labels, cursor: 8.2:1 */
-  --on-light: #0a1250;       /* text on mint, sky and gold fills: 10.6:1 or more */
-  --skip-top: #ffe680;
-  --skip-bot: #f5c542;
-  --now-bg: rgba(163, 220, 255, 0.12);   /* current sentence: white 9.2:1, gold 7.4:1 */
-  --rule: rgba(198, 205, 246, 0.35);     /* dashed dividers (decoration) */
-  --veil: rgba(4, 6, 24, 0.78);
+  --page: #f2f4f7;           /* page background, the darkest surface text sits on */
+  --card: #ffffff;           /* cards (windows) */
+  --line: #d6dbe2;           /* card borders and dividers (decoration) */
+  --line-strong: #9aa3af;    /* outlined buttons, empty progress dots (decoration) */
+  --sel: #eceff3;            /* hover and selected rows and buttons */
+  --ink: #1a1d23;            /* text: 16.9:1 on white */
+  --ink-dim: #434a56;        /* past sentences, notes, sub-lines: 7.7:1 on --sel */
+  --label: #3d4a5c;          /* small capital labels: 8.1:1 on --page */
+  --link: #0b48a8;           /* words with a gloss: 8.4:1 on white, 7.5:1 on --now-bg */
+  --link-line: #8fb0e6;      /* their underline (decoration) */
+  --link-bg: #edf3fd;        /* behind a hovered word: link 7.5:1 */
+  --ok: #0b5530;             /* correct, points: 7.7:1 on --sel */
+  --no: #8f1027;             /* gentle "not yet": 8.0:1 on --sel */
+  --now-bg: #fff2bf;         /* current sentence band */
+  --btn-top: #ffe27a;        /* yellow action buttons, like the helmet */
+  --btn-bot: #f5c542;
+  --pts-bg: #fff6d6;         /* points chip */
+  --pts-line: #ecd27e;
+  --focus: #1d5fd1;          /* focus rings (decoration, 3:1 or more on every surface) */
+  --veil: rgba(26, 29, 35, 0.45);
+  --stage-wall: #34504f;     /* behind the Profe's classroom while it loads (not text) */
+  --lift: 0 1px 2px rgba(16, 24, 40, 0.06), 0 2px 6px rgba(16, 24, 40, 0.06);
+  --lift-hi: 0 8px 28px rgba(16, 24, 40, 0.18);
 
-  /* type: a thick, smooth game face with a solid drop shadow */
+  /* type */
   --font-text: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Arial Rounded MT Bold", "Nunito", system-ui, sans-serif;
   --font-logo: "Mochiy Pop One", "M PLUS Rounded 1c", "Arial Rounded MT Bold", system-ui, sans-serif;
   --read: clamp(17px, 0.45vw + 14.5px, 20px);
   --small: 15px;
-  --label: 13px;
-  --shadow: 2px 2px 0 var(--edge);
+  --label-size: 13px;
+  --radius: 12px;
 
-  /* window frame: dark outline, silver border, light inner bevel, notched corners */
-  --frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 9 9' shape-rendering='crispEdges'%3E%3Cpath fill='%2302040f' d='M1 0h7v1H1zM0 1h1v7H0zM8 1h1v7H8zM1 8h7v1H1z'/%3E%3Cpath fill='%23eef0ff' d='M1 1h7v1H1zM1 2h1v5H1zM7 2h1v5H7zM1 7h7v1H1z'/%3E%3Cpath fill='%237f8fe0' d='M2 2h5v1H2zM2 3h1v3H2zM6 3h1v3H6zM2 6h5v1H2z'/%3E%3C/svg%3E");
-
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
   height: 100%;
-  background: var(--night);
+  background: var(--page);
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -95,9 +98,7 @@ body {
   padding-block: 14px 20px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  background-color: var(--night);
-  background-image: radial-gradient(var(--night-dot) 1px, transparent 1.6px);
-  background-size: 6px 6px;
+  background: var(--page);
   color: var(--ink);
   font-family: var(--font-text);
   font-weight: 700;
@@ -134,9 +135,8 @@ body.reading #app { height: 100%; }
 }
 
 /* Small capitals used for labels: HUD, name tag, titles, chips. */
-.label-type,
 .kicker, .hud, .nametag, .story-title, .m-name, .m-badge, .g-tag,
-.page-head h2, .vgroup h3, .circle li, .chip, kbd, .count-key, .v-n,
+.page-head h2, .vgroup h3, .chip, kbd, .count-key, .v-n,
 .hud-btn, .back, .choice .key {
   font-family: var(--font-text);
   font-weight: 800;
@@ -144,21 +144,20 @@ body.reading #app { height: 100%; }
   text-transform: uppercase;
 }
 
-/* ───────── windows ───────── */
+/* ───────── cards ───────── */
 
 .win {
   position: relative;
-  border: 6px solid transparent;
-  border-image: var(--frame) 3 / 6px stretch;
-  background: linear-gradient(180deg, var(--win-top), var(--win-bot)) padding-box;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
   color: var(--ink);
-  text-shadow: var(--shadow);
+  box-shadow: var(--lift);
 }
 
 .screen.enter .win {
-  animation: win-open 0.26s ease-out both;
-  animation-delay: calc(var(--d, 0) * 70ms);
-  transform-origin: 50% 50%;
+  animation: win-open 0.28s ease-out both;
+  animation-delay: calc(var(--d, 0) * 60ms);
 }
 
 /* ───────── title screen ───────── */
@@ -176,8 +175,7 @@ body.reading #app { height: 100%; }
   font-size: 12px;
   line-height: 1.6;
   letter-spacing: 0.1em;
-  color: var(--sky);
-  text-shadow: var(--shadow);
+  color: var(--label);
 }
 
 .logo {
@@ -189,8 +187,8 @@ body.reading #app { height: 100%; }
   letter-spacing: 0.02em;
   text-transform: uppercase;
   text-wrap: balance;
-  color: var(--gold);
-  text-shadow: 0 3px 0 var(--gold-deep), 0 6px 0 var(--win-bot), 4px 8px 0 var(--edge);
+  color: var(--ink);
+  text-shadow: 0 4px 0 var(--btn-bot);     /* a helmet-yellow underlay (decoration) */
 }
 
 .tagline {
@@ -198,7 +196,17 @@ body.reading #app { height: 100%; }
   max-width: 44ch;
   font-size: var(--small);
   color: var(--ink-dim);
-  text-shadow: var(--shadow);
+}
+
+.score-line {
+  margin: 2px 0 0;
+  padding: 2px 14px;
+  border: 1px solid var(--pts-line);
+  border-radius: 999px;
+  background: var(--pts-bg);
+  font-size: var(--small);
+  font-weight: 800;
+  color: var(--ink);
 }
 
 .scene {
@@ -224,7 +232,7 @@ body.reading #app { height: 100%; }
 
 .menu .sep {
   margin: 6px 10px;
-  border-top: 2px dashed var(--rule);
+  border-top: 1px solid var(--line);
 }
 
 .menu button {
@@ -237,10 +245,10 @@ body.reading #app { height: 100%; }
   column-gap: 12px;
   padding: 8px 12px 8px 34px;
   border: 0;
+  border-radius: 8px;
   background: none;
   color: var(--ink);
   text-align: left;
-  text-shadow: inherit;
   cursor: pointer;
   touch-action: manipulation;
 }
@@ -251,8 +259,8 @@ body.reading #app { height: 100%; }
   left: 11px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 15px;
-  color: var(--sky);
+  font-size: 14px;
+  color: var(--label);
   opacity: 0;
 }
 
@@ -266,7 +274,7 @@ body.reading #app { height: 100%; }
 }
 
 .menu button:focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--focus);
   outline-offset: -2px;
 }
 
@@ -287,9 +295,9 @@ body.reading #app { height: 100%; }
 .m-badge {
   grid-column: 2;
   grid-row: 1 / span 2;
-  font-size: var(--label);
+  font-size: var(--label-size);
   white-space: nowrap;
-  color: var(--gold);
+  color: var(--ok);
 }
 
 .m-badge .star {
@@ -312,7 +320,6 @@ body.reading #app { height: 100%; }
   text-align: center;
   font-size: 13px;
   color: var(--ink-dim);
-  text-shadow: var(--shadow);
 }
 
 /* ───────── reading screen ───────── */
@@ -343,7 +350,7 @@ body.reading #app { height: 100%; }
   gap: 12px;
 }
 
-.hud.no-circle .circle { display: none; }
+.hud.no-circle .dots { display: none; }
 
 @media (min-width: 760px) {
   body.reading #app { max-width: 1200px; }
@@ -362,7 +369,7 @@ body.reading #app { height: 100%; }
     grid-area: side;
     min-height: 0;
     overflow-y: auto;
-    padding: 0 5px 8px;      /* room for focus outlines inside the scroll area */
+    padding: 0 5px 8px;      /* room for focus outlines and shadows inside the scroll area */
   }
 }
 
@@ -371,59 +378,90 @@ body.reading #app { height: 100%; }
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px 12px;
-  padding: 6px 10px;
-  font-size: var(--label);
+  gap: 8px 14px;
+  padding: 8px 12px;
+  font-size: var(--label-size);
   line-height: 1.5;
 }
 
-.hud-lvl { color: var(--gold); font-weight: 900; }
+.hud-lvl { font-weight: 900; }
 .hud-count { color: var(--ink-dim); }
 
-.circle {
+/* Progress through the four questions of a sentence. The dots never say
+   which kind of question comes next, so a yes/no question still has to be read. */
+.dots {
   display: flex;
-  gap: 5px;
+  align-items: center;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.circle li {
-  min-width: 36px;
-  padding: 2px 5px 1px;
-  border: 2px solid currentColor;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 900;
-  color: var(--ink-dim);
-  text-shadow: none;
+.dots li {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
 }
 
-.circle li.now { color: var(--gold); }
-.circle li.ok { background: var(--mint); border-color: var(--mint); color: var(--on-light); }
-.circle li.retry { background: var(--sky); border-color: var(--sky); color: var(--on-light); }
+.dots li.now { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(29, 95, 209, 0.2); }
+.dots li.done { border-color: var(--ink); background: var(--ink); }
 
 .hud-btns {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   margin-left: auto;
+}
+
+/* Running points total, with a "+10" that floats up when points come in. */
+.hud-pts {
+  position: relative;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 12px;
+  border: 1px solid var(--pts-line);
+  border-radius: 999px;
+  background: var(--pts-bg);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-pts.bump { animation: bump 0.35s ease-out; }
+
+.hud-pts .pop {
+  position: absolute;
+  right: calc(100% + 6px);       /* to the left of the chip, inside the HUD */
+  top: 6px;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--ok);
+  pointer-events: none;
+  animation: pts-pop 1s ease-out forwards;
 }
 
 .hud-btn {
   min-width: 38px;
   min-height: 34px;
   padding: 4px 10px;
-  border: 2px solid var(--ink-dim);
-  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--card);
   color: var(--ink);
   font-size: 12px;
-  text-shadow: inherit;
   cursor: pointer;
   touch-action: manipulation;
 }
 
-.hud-btn:hover { border-color: var(--ink); background: var(--sel); }
-.hud-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.hud-btn:hover { background: var(--sel); }
+.hud-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 #hud-sound {
   font-size: 17px;
@@ -437,20 +475,20 @@ body.reading #app { height: 100%; }
   text-decoration-thickness: 2px;
 }
 
-/* The reading window: title, the passage (scrolls), and a footer with the skip button. */
+/* The reading card: title, the passage (scrolls), and a footer with the skip button. */
 .story {
   flex: 1 1 auto;
   min-height: 190px;
   display: flex;
   flex-direction: column;
-  padding: 14px 8px 12px 18px;
+  padding: 16px 10px 14px 20px;
 }
 
 .story-title {
   margin: 0 0 10px;
   font-size: 12px;
   line-height: 1.6;
-  color: var(--sky);
+  color: var(--label);
 }
 
 .story-body {
@@ -460,7 +498,7 @@ body.reading #app { height: 100%; }
   overscroll-behavior: contain;
   padding-right: 10px;
   scrollbar-width: thin;
-  scrollbar-color: var(--ink-dim) transparent;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 .story-body p {
@@ -474,31 +512,32 @@ body.reading #app { height: 100%; }
   justify-content: flex-end;
   margin: 8px 10px 0 0;
   padding-top: 10px;
-  border-top: 2px dashed var(--rule);
+  border-top: 1px solid var(--line);
 }
 
-/* Gold action buttons: "¡Quiero las preguntas!" and "¡Entendido! ¡Vamos!" */
+/* Yellow action buttons: "¡Quiero las preguntas!" and "¡Entendido! ¡Vamos!" */
 .gold-btn {
   min-height: 44px;
-  padding: 4px 14px;
-  border: 6px solid transparent;
-  border-image: var(--frame) 3 / 6px stretch;
-  background: linear-gradient(180deg, var(--skip-top), var(--skip-bot)) padding-box;
-  color: var(--on-light);
+  padding: 6px 16px;
+  border: 1px solid #d9a91f;
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--btn-top), var(--btn-bot));
+  color: var(--ink);
   font-family: var(--font-text);
   font-weight: 800;
   font-size: 16px;
   line-height: 1.3;
+  box-shadow: 0 1px 0 rgba(16, 24, 40, 0.08);
   cursor: pointer;
   touch-action: manipulation;
 }
 
-.gold-btn:hover { filter: brightness(1.06); }       /* lighter gold, darker text: contrast goes up */
-.gold-btn:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+.gold-btn:hover { filter: brightness(1.05); }       /* lighter yellow, dark text: contrast goes up */
+.gold-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .skip::after { content: " ▶▶"; }
 
 .sent {
-  border-radius: 3px;
+  border-radius: 4px;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   transition: color 0.4s;
@@ -506,31 +545,68 @@ body.reading #app { height: 100%; }
 
 .sent.now { background: var(--now-bg); }
 .sent.past { color: var(--ink-dim); }
-.sent.past .term.vocab { color: var(--gold-dim); }
 .story.fin .sent { color: var(--ink); background: none; }
-.story.fin .term.vocab { color: var(--gold); }
 .sent.pulse { animation: pulse 0.45s linear 3; }      /* outline flash: the text colors never change */
 
 /* typewriter: every character is laid out from the start, then revealed */
 .ch { visibility: hidden; }
 .ch.on { visibility: visible; }
 
-.term { border-radius: 3px; }
-.term.vocab { color: var(--gold); }
-.term.extra {
-  text-decoration: underline dotted;
-  text-decoration-color: var(--ink-dim);
+/* Words with a gloss look like links: blue. Chapter words have a solid
+   underline, extra words a dotted one. */
+.term {
+  border-radius: 3px;
+  color: var(--link);
+  text-decoration-line: underline;
+  text-decoration-color: var(--link-line);
   text-decoration-thickness: 2px;
   text-underline-offset: 0.22em;
 }
+.term.extra { text-decoration-style: dotted; }
 .term[role="button"] { cursor: pointer; }
-.term[role="button"]:hover { background: var(--win-bot); }   /* a darker chip behind the word */
-.term:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.term[role="button"]:hover { background: var(--link-bg); text-decoration-color: var(--link); }
+.term:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+/* The Profe's stage above the dialog. profe.js sizes the canvas from
+   --stage-h (the most height it may take) in whole device pixels, with each
+   sprite pixel 1.2 times taller than wide, like the old VGA games. */
+.stage {
+  --stage-h: 216px;
+  flex: none;
+  padding: 0;
+  overflow: hidden;
+  line-height: 0;
+  background: var(--stage-wall);
+}
+
+.stage canvas {
+  display: block;
+  margin: 0 auto;
+  image-rendering: pixelated;
+}
+
+body.no-profe .stage { display: none; }
+
+@media (min-width: 760px) and (max-height: 780px) {
+  .stage { --stage-h: 150px; }
+}
+
+@media (max-width: 759px) {
+  .stage { --stage-h: 150px; }
+}
+
+@media (max-width: 759px) and (max-height: 700px) {
+  .stage { --stage-h: 112px; }
+}
+
+@media (max-height: 640px) {
+  .stage { display: none; }            /* short screens: the reading needs the room */
+}
 
 .dialog-wrap {
   flex: none;
   position: relative;
-  padding-top: 15px;
+  padding-top: 13px;
 }
 
 .nametag {
@@ -539,32 +615,35 @@ body.reading #app { height: 100%; }
   left: 14px;
   z-index: 1;
   padding: 1px 12px 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
   font-size: 12px;
   font-weight: 900;
-  line-height: 1.6;
-  color: var(--gold);
+  line-height: 1.8;
+  color: var(--label);
 }
 
 .dialog {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-height: calc(var(--read) * 1.6 * 3 + 32px);
-  padding: 16px 18px 14px;
+  min-height: calc(var(--read) * 1.6 * 3 + 34px);
+  padding: 18px 18px 14px;
   line-height: 1.6;
 }
 
 .fb, .ask { margin: 0; }
 .fb:empty, .ask:empty { display: none; }
-.fb .yay { color: var(--mint); }
-.fb.hint { color: var(--rose); }
+.fb .yay { color: var(--ok); }
+.fb.hint { color: var(--no); }
 
 .more {
   position: absolute;
   right: 12px;
   bottom: 4px;
   font-size: 14px;
-  color: var(--sky);
+  color: var(--label);
   animation: blink 1s linear infinite;
 }
 
@@ -583,16 +662,16 @@ body.reading #app { height: 100%; }
   align-items: center;
   gap: 10px;
   padding: 8px 14px 8px 34px;
-  border: 6px solid transparent;
-  border-image: var(--frame) 3 / 6px stretch;
-  background: linear-gradient(180deg, var(--win-top), var(--win-bot)) padding-box;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--card);
   color: var(--ink);
   font-family: var(--font-text);
   font-weight: 700;
   font-size: var(--read);
   line-height: 1.35;
   text-align: left;
-  text-shadow: var(--shadow);
+  box-shadow: var(--lift);
   cursor: pointer;
   touch-action: manipulation;
   animation: choice-in 0.34s cubic-bezier(0.2, 1.4, 0.4, 1) both;
@@ -602,19 +681,20 @@ body.reading #app { height: 100%; }
 .choice::before {
   content: "▶";
   position: absolute;
-  left: 10px;
+  left: 11px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 14px;
-  color: var(--sky);
+  font-size: 13px;
+  color: var(--label);
   opacity: 0;
 }
 
-/* Hover and keyboard focus: a darker, selected background, a sky ring and the ▶ cursor. */
+/* Hover and keyboard focus: a light-gray background, a blue ring and the ▶ cursor. */
 .choice:hover:not(:disabled),
 .choice:focus-visible {
-  background: var(--sel) padding-box;
-  box-shadow: inset 0 0 0 2px var(--sky);
+  background: var(--sel);
+  box-shadow: inset 0 0 0 1px var(--focus);
+  border-color: var(--focus);
 }
 
 .choice:hover:not(:disabled)::before,
@@ -623,7 +703,7 @@ body.reading #app { height: 100%; }
   animation: bob 0.6s linear infinite;
 }
 
-.choice:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.choice:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 .choice .key {
   flex: none;
@@ -632,11 +712,16 @@ body.reading #app { height: 100%; }
 }
 
 .choice.go { flex: 0 1 auto; margin-inline: auto; }
-.choice.go .label::after { content: " ▶"; color: var(--sky); }
-.choice.right { color: var(--mint); animation: right-ring 0.6s ease-out both; }
+.choice.go .label::after { content: " ▶"; color: var(--label); }
+.choice.right {
+  color: var(--ok);
+  border-color: var(--ok);
+  animation: right-ring 0.6s ease-out both;
+}
 .choice.wrong {
-  color: var(--rose);
-  background: var(--sel) padding-box;
+  color: var(--no);
+  background: var(--sel);
+  box-shadow: none;
   cursor: default;
   animation: shake 0.42s linear both;
 }
@@ -659,7 +744,6 @@ body.reading #app { height: 100%; }
   font-size: 30px;
   line-height: 1.15;
   letter-spacing: 2px;
-  text-shadow: none;
 }
 
 .choice.is-emoji.wrong .label { text-decoration: none; filter: grayscale(1); }
@@ -680,9 +764,10 @@ body.reading #app { height: 100%; }
   position: fixed;
   z-index: 40;
   max-width: min(320px, calc(100vw - 32px));
-  padding: 9px 14px 10px;
+  padding: 10px 14px 11px;
   font-size: 17px;
   line-height: 1.45;
+  box-shadow: var(--lift-hi);
   animation: pop 0.16s ease-out both;
 }
 
@@ -691,17 +776,17 @@ body.reading #app { height: 100%; }
   margin-bottom: 3px;
   font-size: 11px;
   font-weight: 900;
-  color: var(--sky);
+  color: var(--label);
 }
 
-.gloss .g-es { display: block; color: var(--gold); }
+.gloss .g-es { display: block; color: var(--link); }
 .gloss.is-extra .g-es { color: var(--ink); }
 .gloss .g-en { display: block; }
 .gloss .g-note { display: block; margin-top: 2px; font-size: var(--small); color: var(--ink-dim); }
 
 /* ───────── vocabulary, help and options pages ───────── */
 
-.page { padding: 16px 20px 20px; }
+.page { padding: 18px 20px 20px; }
 
 .page-head {
   display: flex;
@@ -717,33 +802,36 @@ body.reading #app { height: 100%; }
   font-size: 18px;
   font-weight: 900;
   line-height: 1.5;
-  color: var(--gold);
 }
 
 .back {
   min-height: 38px;
   padding: 6px 12px;
-  border: 2px solid var(--ink-dim);
-  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--card);
   color: var(--ink);
   font-size: 12px;
-  text-shadow: inherit;
   cursor: pointer;
 }
 
-.back:hover { border-color: var(--ink); background: var(--sel); }
-.back:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.back:hover { background: var(--sel); }
+.back:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 .page-note { margin: 0 0 6px; font-size: var(--small); color: var(--ink-dim); }
-.gold { color: var(--gold); }
-.count-key { font-size: 12px; color: var(--sky); }
+.blue-word {
+  color: var(--link);
+  text-decoration: underline 2px var(--link-line);
+  text-underline-offset: 0.22em;
+}
+.count-key { font-size: 12px; color: var(--label); }
 
 .vgroup h3 {
   margin: 18px 0 6px;
   font-size: 13px;
   font-weight: 900;
   line-height: 1.5;
-  color: var(--sky);
+  color: var(--label);
 }
 
 .vlist {
@@ -760,10 +848,10 @@ body.reading #app { height: 100%; }
   grid-template-columns: 1fr auto;
   column-gap: 10px;
   padding: 6px 0;
-  border-bottom: 1px dashed var(--rule);
+  border-bottom: 1px solid var(--line);
 }
 
-.v-es { color: var(--gold); }
+.v-es { color: var(--link); }
 .v-en { grid-column: 1; font-size: var(--small); }
 .v-note { color: var(--ink-dim); }
 
@@ -772,7 +860,7 @@ body.reading #app { height: 100%; }
   grid-row: 1 / span 2;
   align-self: center;
   font-size: 12px;
-  color: var(--sky);
+  color: var(--label);
   font-variant-numeric: tabular-nums;
 }
 
@@ -803,20 +891,24 @@ body.reading #app { height: 100%; }
 .chip {
   flex: none;
   min-width: 36px;
-  padding: 1px 5px 0;
-  border: 2px solid var(--gold);
+  padding: 1px 6px 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--card);
   text-align: center;
   font-size: 12px;
   font-weight: 900;
-  color: var(--gold);
-  text-shadow: none;
+  color: var(--ink);
 }
 
 .keys { margin: 18px 0 0; font-size: var(--small); color: var(--ink-dim); }
 
 kbd {
   padding: 1px 6px 0;
-  border: 2px solid var(--ink-dim);
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--card);
   font-size: 12px;
   color: var(--ink);
 }
@@ -824,13 +916,13 @@ kbd {
 .teacher {
   margin: 14px 0 0;
   padding-top: 12px;
-  border-top: 2px dashed var(--rule);
+  border-top: 1px solid var(--line);
   font-size: var(--small);
   color: var(--ink-dim);
 }
 
 #options-list { padding: 0; }
-#options-list .m-badge { color: var(--mint); }
+#options-list .m-badge { color: var(--ok); }
 
 .sample {
   margin: 14px 6px 0;
@@ -852,6 +944,7 @@ kbd {
 .modal-box {
   width: min(440px, 100%);
   padding: 18px;
+  box-shadow: var(--lift-hi);
   animation: win-open 0.2s ease-out both;
 }
 
@@ -885,7 +978,8 @@ kbd {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 14px 16px 12px 20px;
+  padding: 16px 16px 12px 20px;
+  box-shadow: var(--lift-hi);
 }
 
 .sheet:focus,
@@ -908,7 +1002,7 @@ kbd {
   overscroll-behavior: contain;
   padding-right: 10px;
   scrollbar-width: thin;
-  scrollbar-color: var(--ink-dim) transparent;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 .sheet-intro { margin: 0 0 14px; }
@@ -917,13 +1011,26 @@ kbd {
 .privacy {
   margin: 0 0 16px;
   padding: 12px 14px;
-  border: 2px solid var(--mint);
-  background: var(--sel);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--ok);
+  border-radius: 8px;
+  background: var(--page);
 }
 
-.privacy .chip { border-color: var(--mint); color: var(--mint); }
+.privacy .chip { border-color: var(--ok); color: var(--ok); }
 .privacy p { margin: 8px 0 0; }
 .privacy .en { display: block; margin-top: 4px; }
+
+.points-key {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: var(--small);
+}
+
+.points-key b { color: var(--ok); }
 
 .sheet-foot {
   flex: none;
@@ -934,7 +1041,7 @@ kbd {
   gap: 8px 16px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 2px dashed var(--rule);
+  border-top: 1px solid var(--line);
 }
 
 .dont {
@@ -952,11 +1059,11 @@ kbd {
   width: 22px;
   height: 22px;
   margin: 0;
-  accent-color: var(--gold);
+  accent-color: var(--focus);
   cursor: pointer;
 }
 
-.dont input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.dont input:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 .sheet-go { margin-left: auto; }
 .sheet-go::after { content: " ▶"; }
 
@@ -975,19 +1082,18 @@ kbd {
 /* ───────── motion ───────── */
 
 @keyframes choice-in {
-  0% { opacity: 0; transform: translateY(16px) scale(0.9); }
-  70% { opacity: 1; transform: translateY(-3px) scale(1.02); }
+  0% { opacity: 0; transform: translateY(14px) scale(0.94); }
+  70% { opacity: 1; transform: translateY(-2px) scale(1.01); }
   100% { opacity: 1; transform: none; }
 }
 
 @keyframes win-open {
-  0% { opacity: 0.4; transform: scaleY(0.08); }
-  70% { opacity: 1; transform: scaleY(1.04); }
-  100% { opacity: 1; transform: none; }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes pop {
-  from { opacity: 0; transform: scale(0.85); }
+  from { opacity: 0; transform: scale(0.92); }
   to { opacity: 1; transform: none; }
 }
 
@@ -1009,21 +1115,32 @@ kbd {
   75% { transform: translateX(3px); }
 }
 
-/* Correct answer: a mint ring that glows and fades (no brightness change). */
+/* Correct answer: a green ring that glows and fades (no brightness change). */
 @keyframes right-ring {
-  0% { box-shadow: 0 0 0 0 var(--mint), inset 0 0 0 2px var(--mint); }
-  60% { box-shadow: 0 0 0 6px transparent, inset 0 0 0 2px var(--mint); }
-  100% { box-shadow: 0 0 0 0 transparent, inset 0 0 0 2px var(--mint); }
+  0% { box-shadow: 0 0 0 0 var(--ok), inset 0 0 0 1px var(--ok); }
+  60% { box-shadow: 0 0 0 7px transparent, inset 0 0 0 1px var(--ok); }
+  100% { box-shadow: 0 0 0 0 transparent, inset 0 0 0 1px var(--ok); }
 }
 
 @keyframes fade-out {
   to { opacity: 0; transform: translateY(6px) scale(0.96); }
 }
 
-/* Wrong answer: the current sentence flashes a gold outline. */
+/* Wrong answer: the current sentence flashes a blue outline. */
 @keyframes pulse {
   0%, 100% { outline: 2px solid transparent; outline-offset: 2px; }
-  50% { outline: 2px solid var(--gold); outline-offset: 2px; }
+  50% { outline: 2px solid var(--focus); outline-offset: 2px; }
+}
+
+@keyframes bump {
+  0%, 100% { transform: none; }
+  40% { transform: scale(1.12); }
+}
+
+@keyframes pts-pop {
+  0% { opacity: 0; transform: translateY(6px); }
+  20% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-14px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1033,21 +1150,22 @@ kbd {
     animation-iteration-count: 1 !important;
     transition: none !important;
   }
+  .hud-pts .pop { display: none; }
 }
 
 /* ───────── phones ───────── */
 
 @media (max-width: 540px) {
-  .circle { order: 5; flex-basis: 100%; }
   .hud-count .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .story { padding: 10px 6px 10px 12px; min-height: 180px; }
+  .story { padding: 12px 6px 10px 14px; min-height: 180px; }
   .story-foot { margin-right: 6px; padding-top: 8px; }
   .skip { min-height: 40px; font-size: 15px; }
-  .dialog { padding: 14px 12px 12px; min-height: calc(var(--read) * 1.6 * 2 + 30px); }
+  .dialog { padding: 16px 12px 12px; min-height: calc(var(--read) * 1.6 * 2 + 30px); }
   .choices { gap: 8px; }
   .choice { flex-basis: 100%; min-height: 48px; }
   .choice.is-emoji { flex: 1 1 0; }
   .choices.mode-sentences .choice { font-size: 16px; }
   .page { padding: 14px 14px 18px; }
   .menu button { padding-left: 30px; }
+  .hud-pts { padding: 2px 10px; }
 }
